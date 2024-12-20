@@ -5,14 +5,17 @@ const cron = require('node-cron');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 3000; // Dinamik port kullanımına izin verildi
+const PORT = process.env.PORT || 5000; // Vercel'deki dinamik veya sabit port desteği
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
 // MongoDB Bağlantısı
-mongoose.connect(process.env.MONGODB_URI)
+mongoose.connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true, // MongoDB bağlantı ayarları
+    useUnifiedTopology: true
+})
     .then(() => console.log('MongoDB Bağlandı'))
     .catch(err => console.error('MongoDB Bağlantı Hatası:', err));
 
@@ -23,7 +26,7 @@ const vehicleSchema = new mongoose.Schema({
     date: String,
     time: String,
     availableSeats: Number,
-    contact: String,
+    contact: String, // İletişim alanı
     createdAt: {
         type: Date,
         default: Date.now
@@ -37,6 +40,7 @@ app.get('/', (req, res) => {
     res.send('Backend API is running...');
 });
 
+// Araç Paylaşma
 app.post('/api/vehicles', async (req, res) => {
     const { fullName, location, date, time, availableSeats, contact } = req.body;
     try {
@@ -48,6 +52,7 @@ app.post('/api/vehicles', async (req, res) => {
     }
 });
 
+// Bugünden Sonraki Araçları Listeleme
 app.get('/api/vehicles', async (req, res) => {
     try {
         const today = new Date().toISOString().split('T')[0];
@@ -58,6 +63,7 @@ app.get('/api/vehicles', async (req, res) => {
     }
 });
 
+// Belirli Tarihe Göre Araç Listeleme
 app.get('/api/vehicles/date/:date', async (req, res) => {
     const { date } = req.params;
     try {
@@ -68,7 +74,7 @@ app.get('/api/vehicles/date/:date', async (req, res) => {
     }
 });
 
-// Cron Job
+// Geçmiş Araçları Silmek İçin Cron Job
 cron.schedule('0 0 * * *', async () => {
     try {
         const today = new Date().toISOString().split('T')[0];
