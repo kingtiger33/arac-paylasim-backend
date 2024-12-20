@@ -4,6 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const shareForm = document.getElementById('shareForm');
     const shareMessage = document.getElementById('shareMessage');
     const vehiclesContainer = document.getElementById('vehiclesContainer');
+    const searchByDateBtn = document.getElementById('searchByDateBtn');
+    const searchDateInput = document.getElementById('searchDate');
 
     // Sayfa yüklendiğinde mevcut araçları backend'den yükle
     fetchVehicles();
@@ -20,12 +22,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const availableSeats = parseInt(document.getElementById('availableSeats').value);
         const contact = document.getElementById('contact').value.trim();
 
-        // Basit doğrulama
         if (fullName && location && date && time && availableSeats > 0 && contact) {
             const newVehicle = { fullName, location, date, time, availableSeats, contact };
 
             try {
-                // Backend'e POST isteği gönder
                 const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: {
@@ -38,21 +38,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     throw new Error('Araç paylaşımı başarısız oldu.');
                 }
 
-                // Başarı mesajı göster
                 shareMessage.textContent = "Araç başarıyla paylaşıldı!";
                 shareMessage.style.color = "green";
                 shareForm.reset();
                 fetchVehicles(); // Listeyi güncelle
 
-                // Mesajı 3 saniye sonra temizle
                 setTimeout(() => {
                     shareMessage.textContent = "";
                 }, 3000);
             } catch (error) {
-                // Hata mesajı göster
                 shareMessage.textContent = error.message;
                 shareMessage.style.color = "red";
-
                 setTimeout(() => {
                     shareMessage.textContent = "";
                 }, 3000);
@@ -60,22 +56,30 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             shareMessage.textContent = "Lütfen tüm alanları doğru şekilde doldurun.";
             shareMessage.style.color = "red";
-
             setTimeout(() => {
                 shareMessage.textContent = "";
             }, 3000);
         }
     });
 
-    // Backend'den araçları çek ve listele
+    // Tarihe göre arama butonuna tıklandığında
+    searchByDateBtn.addEventListener('click', () => {
+        const selectedDate = searchDateInput.value; // YYYY-MM-DD format
+        if (selectedDate) {
+            fetchVehiclesByDate(selectedDate);
+        } else {
+            // Tarih seçilmemişse tüm araçları getir
+            fetchVehicles();
+        }
+    });
+
+    // Backend'den araçları çek ve listele (gelecekteki tüm araçları)
     async function fetchVehicles() {
         try {
             const response = await fetch(API_URL);
-
             if (!response.ok) {
                 throw new Error('Araçlar yüklenirken bir hata oluştu.');
             }
-
             const vehicles = await response.json();
             renderVehicleList(vehicles);
         } catch (error) {
@@ -83,7 +87,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Araç listesini frontend'de oluştur
+    // Belirli bir tarihteki araçları getir
+    async function fetchVehiclesByDate(dateStr) {
+        try {
+            const response = await fetch(`${API_URL}/date/${dateStr}`);
+            if (!response.ok) {
+                throw new Error('Araçlar yüklenirken bir hata oluştu.');
+            }
+            const vehicles = await response.json();
+            renderVehicleList(vehicles);
+        } catch (error) {
+            vehiclesContainer.innerHTML = `<p class="text-center">${error.message}</p>`;
+        }
+    }
+
+    // Araç listesini frontend'de oluştur (datetime alanını kullanarak)
     function renderVehicleList(vehicles) {
         vehiclesContainer.innerHTML = "";
 
@@ -96,8 +114,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const vehicleCard = document.createElement('div');
             vehicleCard.className = 'vehicle-card';
 
+            const dateObj = new Date(vehicle.datetime);
+            const tarihStr = dateObj.toLocaleDateString('tr-TR');
+            const saatStr = dateObj.toLocaleTimeString('tr-TR', {hour: '2-digit', minute: '2-digit'});
+
             vehicleCard.innerHTML = `
-                <h5>${vehicle.location} - ${new Date(vehicle.date).toLocaleDateString('tr-TR')} ${vehicle.time}</h5>
+                <h5>${vehicle.location} - ${tarihStr} ${saatStr}</h5>
                 <p><strong>Sürücü:</strong> ${vehicle.fullName}</p>
                 <p><strong>Mevcut Koltuk:</strong> ${vehicle.availableSeats}</p>
                 <p><strong>İletişim:</strong> ${vehicle.contact}</p>
