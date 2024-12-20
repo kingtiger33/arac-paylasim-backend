@@ -25,7 +25,7 @@ const vehicleSchema = new mongoose.Schema({
     location: String,
     datetime: Date, // date+time birleşik
     availableSeats: Number,
-    contact: String, // Eğer iletişim alanı eklemişseniz buraya ekleyin
+    contact: String,
     createdAt: {
         type: Date,
         default: Date.now
@@ -42,13 +42,18 @@ app.get('/', (req, res) => {
 // Araç Paylaşma
 app.post('/api/vehicles', async (req, res) => {
     const { fullName, location, date, time, availableSeats, contact } = req.body;
-    console.log("Gelen veri:", {fullName, location, date, time, availableSeats, contact});
-    
+    console.log("Gelen Veri:", { fullName, location, date, time, availableSeats, contact });
+
+    // date: "YYYY-MM-DD", time: "HH:MM" formatında geldiğini varsayıyoruz.
+    if (!date || !time) {
+        return res.status(400).json({ message: 'Tarih veya saat bulunamadı.' });
+    }
+
     const [year, month, day] = date.split('-');
     const [hour, minute] = time.split(':');
     const datetime = new Date(year, month - 1, day, hour, minute);
     console.log("Oluşturulan datetime:", datetime);
-    
+
     try {
         const newVehicle = new Vehicle({ 
             fullName, 
@@ -60,18 +65,15 @@ app.post('/api/vehicles', async (req, res) => {
         await newVehicle.save();
         res.status(201).json(newVehicle);
     } catch (error) {
+        console.error("Kayıt hatası:", error.message);
         res.status(400).json({ message: error.message });
     }
 });
 
-
-// Araç Listeleme
-// Gelecekteki araçları datetime'a göre sıralayarak getirelim
+// Araç Listeleme (Gelecekteki araçlar)
 app.get('/api/vehicles', async (req, res) => {
     try {
         const now = new Date();
-        // Eğer tüm araçları getirmek isterseniz aşağıdaki satırı datetime filtresi olmadan da yapabilirsiniz:
-        // const vehicles = await Vehicle.find().sort({ datetime: 1 });
         const vehicles = await Vehicle.find({ datetime: { $gte: now } }).sort({ datetime: 1 });
         res.json(vehicles);
     } catch (error) {
@@ -79,20 +81,18 @@ app.get('/api/vehicles', async (req, res) => {
     }
 });
 
-// Koltuk Talep Etme
-app.put('/api/vehicles/:id/request', async (req, res) => {
-    const { id } = req.params;
+// Tarihe Göre Araç Listeleme
+app.get('/api/vehicles/date/:date', async (req, res) => {
+    const { date } = req.params;
+    const [year, month, day] = date.split('-');
+    const startOfDay = new Date(year, month - 1, day, 0, 0, 0);
+    const endOfDay = new Date(year, month - 1, day, 23, 59, 59);
+
     try {
-        const vehicle = await Vehicle.findById(id);
-        if (!vehicle) {
-            return res.status(404).json({ message: 'Araç bulunamadı' });
-        }
-        if (vehicle.availableSeats < 1) {
-            return res.status(400).json({ message: 'Koltuk kalmadı' });
-        }
-        vehicle.availableSeats -= 1;
-        await vehicle.save();
-        res.json(vehicle);
+        const vehicles = await Vehicle.find({
+            datetime: { $gte: startOfDay, $lte: endOfDay }
+        }).sort({ datetime: 1 });
+        res.json(vehicles);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
