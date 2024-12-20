@@ -4,9 +4,23 @@
     {
       "src": "server.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
     }
   ],
+  "functions": {
+    "api/cleanup.js": {
+      "runtime": "nodejs18.x",
+      "schedule": "@daily"
+    }
+  },
   "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
     {
       "src": "/(.*)",
       "dest": "server.js"
