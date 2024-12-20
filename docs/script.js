@@ -1,3 +1,4 @@
+// script.js
 const API_URL = 'https://arac-paylasim-backend.vercel.app/api/vehicles';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -22,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const availableSeats = parseInt(document.getElementById('availableSeats').value);
         const contact = document.getElementById('contact').value.trim();
 
+        // Basit doğrulama
         if (fullName && location && date && time && availableSeats > 0 && contact) {
             const newVehicle = { fullName, location, date, time, availableSeats, contact };
 
@@ -114,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const vehicleCard = document.createElement('div');
             vehicleCard.className = 'vehicle-card';
 
+            // vehicle.datetime alanı varsa
             const dateObj = new Date(vehicle.datetime);
             const tarihStr = dateObj.toLocaleDateString('tr-TR');
             const saatStr = dateObj.toLocaleTimeString('tr-TR', {hour: '2-digit', minute: '2-digit'});
@@ -122,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h5>${vehicle.location} - ${tarihStr} ${saatStr}</h5>
                 <p><strong>Sürücü:</strong> ${vehicle.fullName}</p>
                 <p><strong>Mevcut Koltuk:</strong> ${vehicle.availableSeats}</p>
-                <p><strong>İletişim:</strong> ${vehicle.contact}</p>
+                <p><strong>İletişim:</strong> ${vehicle.contact ? vehicle.contact : "Bilinmiyor"}</p>
             `;
 
             vehiclesContainer.appendChild(vehicleCard);
