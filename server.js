@@ -23,7 +23,7 @@ mongoose.connect(process.env.MONGODB_URI, {
 const vehicleSchema = new mongoose.Schema({
     fullName: String,
     location: String,
-    datetime: Date, // date+time birleşik
+    datetime: Date, // date+time birleşik (UTC)
     availableSeats: Number,
     contact: String,
     createdAt: {
@@ -51,8 +51,9 @@ app.post('/api/vehicles', async (req, res) => {
 
     const [year, month, day] = date.split('-');
     const [hour, minute] = time.split(':');
-    const datetime = new Date(year, month - 1, day, hour, minute);
-    console.log("Oluşturulan datetime:", datetime);
+    // Tarihi UTC olarak oluşturuyoruz
+    const datetime = new Date(Date.UTC(year, month - 1, day, hour, minute));
+    console.log("Oluşturulan datetime (UTC):", datetime);
 
     try {
         const newVehicle = new Vehicle({ 
@@ -83,10 +84,12 @@ app.get('/api/vehicles', async (req, res) => {
 
 // Tarihe Göre Araç Listeleme
 app.get('/api/vehicles/date/:date', async (req, res) => {
-    const { date } = req.params;
+    const { date } = req.params; // "YYYY-MM-DD"
     const [year, month, day] = date.split('-');
-    const startOfDay = new Date(year, month - 1, day, 0, 0, 0);
-    const endOfDay = new Date(year, month - 1, day, 23, 59, 59);
+
+    // Tarih aralığını UTC tabanlı oluşturuyoruz
+    const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
+    const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59));
 
     try {
         const vehicles = await Vehicle.find({
