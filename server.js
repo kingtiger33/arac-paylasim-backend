@@ -19,13 +19,13 @@ mongoose.connect(process.env.MONGODB_URI, {
 .then(() => console.log('MongoDB Bağlandı'))
 .catch(err => console.error('MongoDB Bağlantı Hatası:', err));
 
-// Araç Şeması
+// Araç Şeması (datetime alanını Date tipinde tutuyoruz)
 const vehicleSchema = new mongoose.Schema({
     fullName: String,
     location: String,
-    date: String,
-    time: String,
+    datetime: Date, // date+time birleşik
     availableSeats: Number,
+    contact: String, // Eğer iletişim alanı eklemişseniz buraya ekleyin
     createdAt: {
         type: Date,
         default: Date.now
@@ -34,8 +34,6 @@ const vehicleSchema = new mongoose.Schema({
 
 const Vehicle = mongoose.model('Vehicle', vehicleSchema);
 
-// API Rotaları
-
 // Ana sayfa rotası
 app.get('/', (req, res) => {
     res.send('Backend API is running...');
@@ -43,9 +41,21 @@ app.get('/', (req, res) => {
 
 // Araç Paylaşma
 app.post('/api/vehicles', async (req, res) => {
-    const { fullName, location, date, time, availableSeats } = req.body;
+    const { fullName, location, date, time, availableSeats, contact } = req.body;
+
+    // date: "YYYY-MM-DD", time: "HH:MM" formatında varsayıyoruz.
+    const [year, month, day] = date.split('-');
+    const [hour, minute] = time.split(':');
+    const datetime = new Date(year, month - 1, day, hour, minute);
+
     try {
-        const newVehicle = new Vehicle({ fullName, location, date, time, availableSeats });
+        const newVehicle = new Vehicle({ 
+            fullName, 
+            location, 
+            datetime, 
+            availableSeats, 
+            contact 
+        });
         await newVehicle.save();
         res.status(201).json(newVehicle);
     } catch (error) {
@@ -54,9 +64,13 @@ app.post('/api/vehicles', async (req, res) => {
 });
 
 // Araç Listeleme
+// Gelecekteki araçları datetime'a göre sıralayarak getirelim
 app.get('/api/vehicles', async (req, res) => {
     try {
-        const vehicles = await Vehicle.find();
+        const now = new Date();
+        // Eğer tüm araçları getirmek isterseniz aşağıdaki satırı datetime filtresi olmadan da yapabilirsiniz:
+        // const vehicles = await Vehicle.find().sort({ datetime: 1 });
+        const vehicles = await Vehicle.find({ datetime: { $gte: now } }).sort({ datetime: 1 });
         res.json(vehicles);
     } catch (error) {
         res.status(500).json({ message: error.message });
