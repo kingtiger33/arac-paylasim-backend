@@ -1,13 +1,15 @@
-// script.js
+const API_URL = 'https://arac-paylasim-backend.vercel.app/api/vehicles';
 
 document.addEventListener('DOMContentLoaded', () => {
     const shareForm = document.getElementById('shareForm');
     const shareMessage = document.getElementById('shareMessage');
     const vehiclesContainer = document.getElementById('vehiclesContainer');
 
-    let vehicles = [];
+    // Sayfa yüklendiğinde mevcut araçları yükle
+    fetchVehicles();
 
-    shareForm.addEventListener('submit', (e) => {
+    // Araç paylaşma formu gönderildiğinde
+    shareForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
         // Form verilerini al
@@ -19,29 +21,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Basit doğrulama
         if (fullName && location && date && time && availableSeats > 0) {
-            const newVehicle = {
-                id: Date.now(),
-                fullName,
-                location,
-                date,
-                time,
-                availableSeats
-            };
+            const newVehicle = { fullName, location, date, time, availableSeats };
 
-            vehicles.push(newVehicle);
+            try {
+                // Backend'e POST isteği gönder
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(newVehicle)
+                });
 
-            // Araç listesini güncelle
-            renderVehicleList();
+                if (!response.ok) {
+                    throw new Error('Araç paylaşımı başarısız oldu.');
+                }
 
-            // Formu sıfırla ve mesaj göster
-            shareMessage.textContent = "Araç başarıyla paylaşıldı!";
-            shareMessage.style.color = "green";
-            shareForm.reset();
+                // Yeni aracı listeye ekle
+                shareMessage.textContent = "Araç başarıyla paylaşıldı!";
+                shareMessage.style.color = "green";
+                shareForm.reset();
+                fetchVehicles(); // Listeyi güncelle
 
-            // Mesajı 3 saniye sonra temizle
-            setTimeout(() => {
-                shareMessage.textContent = "";
-            }, 3000);
+                // Mesajı 3 saniye sonra temizle
+                setTimeout(() => {
+                    shareMessage.textContent = "";
+                }, 3000);
+            } catch (error) {
+                shareMessage.textContent = error.message;
+                shareMessage.style.color = "red";
+
+                // Mesajı 3 saniye sonra temizle
+                setTimeout(() => {
+                    shareMessage.textContent = "";
+                }, 3000);
+            }
         } else {
             shareMessage.textContent = "Lütfen tüm alanları doğru şekilde doldurun.";
             shareMessage.style.color = "red";
@@ -53,7 +67,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    function renderVehicleList() {
+    // Backend'den araçları çek ve listele
+    async function fetchVehicles() {
+        try {
+            const response = await fetch(API_URL);
+
+            if (!response.ok) {
+                throw new Error('Araçlar yüklenirken bir hata oluştu.');
+            }
+
+            const vehicles = await response.json();
+            renderVehicleList(vehicles);
+        } catch (error) {
+            vehiclesContainer.innerHTML = `<p class="text-center">${error.message}</p>`;
+        }
+    }
+
+    // Araç listesini frontend'de oluştur
+    function renderVehicleList(vehicles) {
         vehiclesContainer.innerHTML = "";
 
         if (vehicles.length === 0) {
@@ -73,14 +104,21 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
 
             const requestButton = vehicleCard.querySelector('.request-button');
-            requestButton.addEventListener('click', () => {
+            requestButton.addEventListener('click', async () => {
                 if (confirm("Araç talep etmek istediğinize emin misiniz?")) {
-                    if (vehicle.availableSeats > 0) {
-                        vehicle.availableSeats -= 1;
-                        renderVehicleList();
+                    try {
+                        const response = await fetch(`${API_URL}/${vehicle._id}/request`, {
+                            method: 'PUT',
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Araç talep etme başarısız oldu.');
+                        }
+
                         alert("Araç talebiniz başarıyla alındı!");
-                    } else {
-                        alert("Koltuk kalmadı.");
+                        fetchVehicles(); // Listeyi güncelle
+                    } catch (error) {
+                        alert(error.message);
                     }
                 }
             });
