@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const availableSeats = parseInt(document.getElementById('availableSeats').value);
         const contact = document.getElementById('contact').value.trim();
 
-        // Basit doğrulama
         if (fullName && location && date && time && availableSeats > 0 && contact) {
             const newVehicle = { fullName, location, date, time, availableSeats, contact };
 
@@ -66,16 +65,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Tarihe göre arama butonuna tıklandığında
     searchByDateBtn.addEventListener('click', () => {
-        const selectedDate = searchDateInput.value; // YYYY-MM-DD format
+        const selectedDate = searchDateInput.value; // "YYYY-MM-DD"
         if (selectedDate) {
             fetchVehiclesByDate(selectedDate);
         } else {
-            // Tarih seçilmemişse tüm araçları getir
             fetchVehicles();
         }
     });
 
-    // Backend'den araçları çek ve listele (gelecekteki tüm araçları)
+    // Backend'den araçları çek ve listele
     async function fetchVehicles() {
         try {
             const response = await fetch(API_URL);
@@ -103,41 +101,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Araç listesini frontend'de oluştur (datetime alanını kullanarak)
-   function renderVehicleList(vehicles) {
-    vehiclesContainer.innerHTML = "";
+    // Araç listesini frontend'de oluştur (date ve time string olarak saklı)
+    function renderVehicleList(vehicles) {
+        vehiclesContainer.innerHTML = "";
 
-    if (vehicles.length === 0) {
-        vehiclesContainer.innerHTML = '<p class="text-center">Henüz paylaşılmış araç bulunmamaktadır.</p>';
-        return;
+        if (vehicles.length === 0) {
+            vehiclesContainer.innerHTML = '<p class="text-center">Henüz paylaşılmış araç bulunmamaktadır.</p>';
+            return;
+        }
+
+        vehicles.forEach(vehicle => {
+            const vehicleCard = document.createElement('div');
+            vehicleCard.className = 'vehicle-card';
+
+            // date alanı "YYYY-MM-DD", time alanı "HH:MM" formatında.
+            // İsterseniz tarihi DD.MM.YYYY formatına çevirebilirsiniz:
+            const [y, m, d] = vehicle.date.split('-');
+            const finalDate = `${d}.${m}.${y}`; // Örn: "21.12.2024"
+            const finalTime = vehicle.time;     // "HH:MM" aynen
+
+            vehicleCard.innerHTML = `
+                <h5>${vehicle.location} - ${finalDate} ${finalTime}</h5>
+                <p><strong>Sürücü:</strong> ${vehicle.fullName}</p>
+                <p><strong>Mevcut Koltuk:</strong> ${vehicle.availableSeats}</p>
+                <p><strong>İletişim:</strong> ${vehicle.contact || 'Bilinmiyor'}</p>
+            `;
+
+            vehiclesContainer.appendChild(vehicleCard);
+        });
     }
-
-    vehicles.forEach(vehicle => {
-        const vehicleCard = document.createElement('div');
-        vehicleCard.className = 'vehicle-card';
-
-        const dateObj = new Date(vehicle.datetime);
-
-        // UTC bazlı değerleri alalım
-        const yyyy = dateObj.getUTCFullYear();
-        const mm = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
-        const dd = String(dateObj.getUTCDate()).padStart(2, '0');
-        const HH = String(dateObj.getUTCHours()).padStart(2, '0');
-        const MM = String(dateObj.getUTCMinutes()).padStart(2, '0');
-
-        // Orijinal girilen formatı korumak için tarih ve saati bu şekilde gösteriyoruz.
-        // Örneğin kullanıcı HTML formunda YYYY-MM-DD ve HH:MM formatında girmişti.
-        // İsterseniz dd.mm.yyyy veya yy/mm/dd gibi istediğiniz formatta gösterebilirsiniz.
-        const tarihStr = `${dd}.${mm}.${yyyy}`;
-        const saatStr = `${HH}:${MM}`;
-
-        vehicleCard.innerHTML = `
-            <h5>${vehicle.location} - ${tarihStr} ${saatStr}</h5>
-            <p><strong>Sürücü:</strong> ${vehicle.fullName}</p>
-            <p><strong>Mevcut Koltuk:</strong> ${vehicle.availableSeats}</p>
-            <p><strong>İletişim:</strong> ${vehicle.contact || 'Bilinmiyor'}</p>
-        `;
-
-        vehiclesContainer.appendChild(vehicleCard);
-    });
-}
+});
