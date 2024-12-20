@@ -17,8 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Form verilerini al
         const fullName = document.getElementById('fullName').value.trim();
         const location = document.getElementById('location').value.trim();
-        const date = document.getElementById('date').value;
-        const time = document.getElementById('time').value;
+        const date = document.getElementById('date').value; // "YYYY-MM-DD"
+        const time = document.getElementById('time').value; // "HH:MM"
         const availableSeats = parseInt(document.getElementById('availableSeats').value);
         const contact = document.getElementById('contact').value.trim();
 
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Araç listesini frontend'de oluştur (datetime ile kontrol)
+    // Araç listesini frontend'de oluştur (date ve time alanlarını birleştirerek)
     function renderVehicleList(vehicles) {
         vehiclesContainer.innerHTML = "";
 
@@ -113,13 +113,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const vehicleCard = document.createElement('div');
             vehicleCard.className = 'vehicle-card';
 
-            // Tarih ve saat formatını düzenleyin
-            const dateTime = new Date(vehicle.datetime);
-            const dateStr = dateTime.toLocaleDateString('tr-TR'); // DD.MM.YYYY
-            const timeStr = dateTime.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+            // `date` ve `time` alanlarını birleştirerek tarih ve saat oluştur
+            const [y, m, d] = vehicle.date.split('-'); // YYYY-MM-DD formatını parçala
+            const finalDate = `${d}.${m}.${y}`;        // DD.MM.YYYY formatına dönüştür
+            const finalTime = vehicle.time;           // HH:MM formatında saati al
 
             vehicleCard.innerHTML = `
-                <h5>${vehicle.location} - ${dateStr} ${timeStr}</h5>
+                <h5>${vehicle.location} - ${finalDate} ${finalTime}</h5>
                 <p><strong>Sürücü:</strong> ${vehicle.fullName}</p>
                 <p><strong>Mevcut Koltuk:</strong> ${vehicle.availableSeats}</p>
                 <p><strong>İletişim:</strong> ${vehicle.contact || 'Bilinmiyor'}</p>
