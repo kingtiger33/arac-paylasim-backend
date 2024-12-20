@@ -58,6 +58,19 @@
         <!-- Araç Listesi -->
         <section id="vehicle-list" class="mt-5">
             <h2 class="text-center mb-4">Mevcut Araçlar</h2>
+            
+            <!-- Tarihe göre arama alanı -->
+            <div class="row mb-4">
+                <div class="col-md-4 offset-md-4">
+                    <div class="input-group">
+                        <input type="date" class="form-control" id="searchDate" placeholder="Tarih Seçin">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary" id="searchByDateBtn">Ara</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div id="vehiclesContainer" class="vehicles-container">
                 <!-- Araçlar burada listelenecek -->
                 <p class="text-center">Henüz paylaşılmış araç bulunmamaktadır.</p>
@@ -67,7 +80,7 @@
 
     <!-- Footer -->
     <footer class="bg-dark text-white text-center py-3 mt-5">
-        &copy;  Araç Paylaşım Sistemi
+        &copy; Araç Paylaşım Sistemi
     </footer>
 
     <!-- jQuery ve Bootstrap JS -->
