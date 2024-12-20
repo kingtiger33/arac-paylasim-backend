@@ -19,11 +19,14 @@ mongoose.connect(process.env.MONGODB_URI, {
 .then(() => console.log('MongoDB Bağlandı'))
 .catch(err => console.error('MongoDB Bağlantı Hatası:', err));
 
-// Araç Şeması (datetime alanını Date tipinde tutuyoruz)
+// Araç Şeması
+// Tarih ve saat string olarak saklanıyor.
+// date: "YYYY-MM-DD", time: "HH:MM"
 const vehicleSchema = new mongoose.Schema({
     fullName: String,
     location: String,
-    datetime: Date, // date+time birleşik (UTC)
+    date: String,        // String formatında tarih
+    time: String,        // String formatında saat
     availableSeats: Number,
     contact: String,
     createdAt: {
@@ -39,27 +42,22 @@ app.get('/', (req, res) => {
     res.send('Backend API is running...');
 });
 
-// Araç Paylaşma
+// Araç Paylaşma (tarih ve saat string olarak kaydedilir)
 app.post('/api/vehicles', async (req, res) => {
     const { fullName, location, date, time, availableSeats, contact } = req.body;
     console.log("Gelen Veri:", { fullName, location, date, time, availableSeats, contact });
 
-    // date: "YYYY-MM-DD", time: "HH:MM" formatında geldiğini varsayıyoruz.
+    // Basit doğrulama
     if (!date || !time) {
-        return res.status(400).json({ message: 'Tarih veya saat bulunamadı.' });
+        return res.status(400).json({ message: 'Tarih veya saat alanı eksik.' });
     }
-
-    const [year, month, day] = date.split('-');
-    const [hour, minute] = time.split(':');
-    // Tarihi UTC olarak oluşturuyoruz
-    const datetime = new Date(Date.UTC(year, month - 1, day, hour, minute));
-    console.log("Oluşturulan datetime (UTC):", datetime);
 
     try {
         const newVehicle = new Vehicle({ 
             fullName, 
             location, 
-            datetime, 
+            date,        // String olarak sakla
+            time,        // String olarak sakla
             availableSeats, 
             contact 
         });
@@ -71,11 +69,11 @@ app.post('/api/vehicles', async (req, res) => {
     }
 });
 
-// Araç Listeleme (Gelecekteki araçlar)
+// Araç Listeleme (Tüm araçlar)
 app.get('/api/vehicles', async (req, res) => {
     try {
-        const now = new Date();
-        const vehicles = await Vehicle.find({ datetime: { $gte: now } }).sort({ datetime: 1 });
+        // İsterseniz tarihe göre sıralamak için: sort({ date: 1, time: 1 })
+        const vehicles = await Vehicle.find().sort({ date: 1, time: 1 });
         res.json(vehicles);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -83,18 +81,13 @@ app.get('/api/vehicles', async (req, res) => {
 });
 
 // Tarihe Göre Araç Listeleme
+// Bu sorguda doğrudan string karşılaştırması yapıyoruz.
+// Yani date = "YYYY-MM-DD" eşleşmesi
 app.get('/api/vehicles/date/:date', async (req, res) => {
     const { date } = req.params; // "YYYY-MM-DD"
-    const [year, month, day] = date.split('-');
-
-    // Tarih aralığını UTC tabanlı oluşturuyoruz
-    const startOfDay = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
-    const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59));
-
     try {
-        const vehicles = await Vehicle.find({
-            datetime: { $gte: startOfDay, $lte: endOfDay }
-        }).sort({ datetime: 1 });
+        // O güne ait tüm araçları listele
+        const vehicles = await Vehicle.find({ date }).sort({ time: 1 });
         res.json(vehicles);
     } catch (error) {
         res.status(500).json({ message: error.message });
