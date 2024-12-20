@@ -104,31 +104,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Araç listesini frontend'de oluştur (datetime alanını kullanarak)
-    function renderVehicleList(vehicles) {
-        vehiclesContainer.innerHTML = "";
+   function renderVehicleList(vehicles) {
+    vehiclesContainer.innerHTML = "";
 
-        if (vehicles.length === 0) {
-            vehiclesContainer.innerHTML = '<p class="text-center">Henüz paylaşılmış araç bulunmamaktadır.</p>';
-            return;
-        }
-
-        vehicles.forEach(vehicle => {
-            const vehicleCard = document.createElement('div');
-            vehicleCard.className = 'vehicle-card';
-
-            // vehicle.datetime alanı varsa
-            const dateObj = new Date(vehicle.datetime);
-            const tarihStr = dateObj.toLocaleDateString('tr-TR');
-            const saatStr = dateObj.toLocaleTimeString('tr-TR', {hour: '2-digit', minute: '2-digit'});
-
-            vehicleCard.innerHTML = `
-                <h5>${vehicle.location} - ${tarihStr} ${saatStr}</h5>
-                <p><strong>Sürücü:</strong> ${vehicle.fullName}</p>
-                <p><strong>Mevcut Koltuk:</strong> ${vehicle.availableSeats}</p>
-                <p><strong>İletişim:</strong> ${vehicle.contact ? vehicle.contact : "Bilinmiyor"}</p>
-            `;
-
-            vehiclesContainer.appendChild(vehicleCard);
-        });
+    if (vehicles.length === 0) {
+        vehiclesContainer.innerHTML = '<p class="text-center">Henüz paylaşılmış araç bulunmamaktadır.</p>';
+        return;
     }
-});
+
+    vehicles.forEach(vehicle => {
+        const vehicleCard = document.createElement('div');
+        vehicleCard.className = 'vehicle-card';
+
+        const dateObj = new Date(vehicle.datetime);
+
+        // UTC bazlı değerleri alalım
+        const yyyy = dateObj.getUTCFullYear();
+        const mm = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+        const dd = String(dateObj.getUTCDate()).padStart(2, '0');
+        const HH = String(dateObj.getUTCHours()).padStart(2, '0');
+        const MM = String(dateObj.getUTCMinutes()).padStart(2, '0');
+
+        // Orijinal girilen formatı korumak için tarih ve saati bu şekilde gösteriyoruz.
+        // Örneğin kullanıcı HTML formunda YYYY-MM-DD ve HH:MM formatında girmişti.
+        // İsterseniz dd.mm.yyyy veya yy/mm/dd gibi istediğiniz formatta gösterebilirsiniz.
+        const tarihStr = `${dd}.${mm}.${yyyy}`;
+        const saatStr = `${HH}:${MM}`;
+
+        vehicleCard.innerHTML = `
+            <h5>${vehicle.location} - ${tarihStr} ${saatStr}</h5>
+            <p><strong>Sürücü:</strong> ${vehicle.fullName}</p>
+            <p><strong>Mevcut Koltuk:</strong> ${vehicle.availableSeats}</p>
+            <p><strong>İletişim:</strong> ${vehicle.contact || 'Bilinmiyor'}</p>
+        `;
+
+        vehiclesContainer.appendChild(vehicleCard);
+    });
+}
