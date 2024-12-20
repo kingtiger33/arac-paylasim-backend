@@ -5,7 +5,7 @@ const cron = require('node-cron');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000; // Dinamik port kullanımına izin verildi
 
 // Middleware
 app.use(cors());
@@ -81,5 +81,5 @@ cron.schedule('0 0 * * *', async () => {
 
 // Sunucu Başlatma
 app.listen(PORT, () => {
-    console.log(`Sunucu çalışıyor`);
+    console.log(`Sunucu ${PORT} portunda çalışıyor`);
 });
