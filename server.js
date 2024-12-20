@@ -42,12 +42,13 @@ app.get('/', (req, res) => {
 // Araç Paylaşma
 app.post('/api/vehicles', async (req, res) => {
     const { fullName, location, date, time, availableSeats, contact } = req.body;
-
-    // date: "YYYY-MM-DD", time: "HH:MM" formatında varsayıyoruz.
+    console.log("Gelen veri:", {fullName, location, date, time, availableSeats, contact});
+    
     const [year, month, day] = date.split('-');
     const [hour, minute] = time.split(':');
     const datetime = new Date(year, month - 1, day, hour, minute);
-
+    console.log("Oluşturulan datetime:", datetime);
+    
     try {
         const newVehicle = new Vehicle({ 
             fullName, 
@@ -62,6 +63,7 @@ app.post('/api/vehicles', async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 });
+
 
 // Araç Listeleme
 // Gelecekteki araçları datetime'a göre sıralayarak getirelim
