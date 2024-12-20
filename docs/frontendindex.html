@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Araç Paylaşım</title>
+</head>
+<body>
+    <h1>Araç Paylaşım Sistemi</h1>
+    <form id="shareForm">
+        <input type="text" id="fullName" placeholder="Ad Soyad" required />
+        <input type="text" id="location" placeholder="Lokasyon" required />
+        <input type="date" id="date" required />
+        <input type="time" id="time" required />
+        <input type="number" id="availableSeats" placeholder="Mevcut Koltuk Sayısı" required />
+        <button type="submit">Araç Paylaş</button>
+    </form>
+
+    <h2>Mevcut Araçlar</h2>
+    <div id="vehicleList"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
