@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const cron = require('node-cron'); // Cron job için gerekli paket
+const cron = require('node-cron');
 require('dotenv').config();
 
 const app = express();
@@ -12,12 +12,9 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDB Bağlantısı
-mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-})
-.then(() => console.log('MongoDB Bağlandı'))
-.catch(err => console.error('MongoDB Bağlantı Hatası:', err));
+mongoose.connect(process.env.MONGODB_URI)
+    .then(() => console.log('MongoDB Bağlandı'))
+    .catch(err => console.error('MongoDB Bağlantı Hatası:', err));
 
 // Araç Şeması
 const vehicleSchema = new mongoose.Schema({
@@ -26,7 +23,7 @@ const vehicleSchema = new mongoose.Schema({
     date: String,
     time: String,
     availableSeats: Number,
-    contact: String, // İletişim alanı eklendi
+    contact: String,
     createdAt: {
         type: Date,
         default: Date.now
@@ -36,15 +33,12 @@ const vehicleSchema = new mongoose.Schema({
 const Vehicle = mongoose.model('Vehicle', vehicleSchema);
 
 // API Rotaları
-
-// Ana sayfa rotası
 app.get('/', (req, res) => {
     res.send('Backend API is running...');
 });
 
-// Araç Paylaşma
 app.post('/api/vehicles', async (req, res) => {
-    const { fullName, location, date, time, availableSeats, contact } = req.body; // Contact bilgisi eklendi
+    const { fullName, location, date, time, availableSeats, contact } = req.body;
     try {
         const newVehicle = new Vehicle({ fullName, location, date, time, availableSeats, contact });
         await newVehicle.save();
@@ -54,52 +48,31 @@ app.post('/api/vehicles', async (req, res) => {
     }
 });
 
-// Araç Listeleme (Bugünden Sonraki Tarihler)
 app.get('/api/vehicles', async (req, res) => {
     try {
-        const today = new Date().toISOString().split('T')[0]; // Bugünün tarihini alın
-        const vehicles = await Vehicle.find({ date: { $gte: today } }); // Tarihi bugünden büyük veya eşit olanları al
+        const today = new Date().toISOString().split('T')[0];
+        const vehicles = await Vehicle.find({ date: { $gte: today } });
         res.json(vehicles);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 });
 
-// Belirli Tarihe Göre Araç Listeleme
 app.get('/api/vehicles/date/:date', async (req, res) => {
     const { date } = req.params;
     try {
-        const vehicles = await Vehicle.find({ date }); // Verilen tarihe ait araçlar
+        const vehicles = await Vehicle.find({ date });
         res.json(vehicles);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 });
 
-// Koltuk Talep Etme
-app.put('/api/vehicles/:id/request', async (req, res) => {
-    const { id } = req.params;
-    try {
-        const vehicle = await Vehicle.findById(id);
-        if (!vehicle) {
-            return res.status(404).json({ message: 'Araç bulunamadı' });
-        }
-        if (vehicle.availableSeats < 1) {
-            return res.status(400).json({ message: 'Koltuk kalmadı' });
-        }
-        vehicle.availableSeats -= 1;
-        await vehicle.save();
-        res.json(vehicle);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
-
-// Cron Job: Günlük olarak geçmiş araçları sil
+// Cron Job
 cron.schedule('0 0 * * *', async () => {
     try {
         const today = new Date().toISOString().split('T')[0];
-        const result = await Vehicle.deleteMany({ date: { $lt: today } }); // Tarihi bugünden küçük olanları sil
+        const result = await Vehicle.deleteMany({ date: { $lt: today } });
         console.log(`Geçmiş araçlar temizlendi. Silinen araç sayısı: ${result.deletedCount}`);
     } catch (error) {
         console.error('Cron job hatası:', error.message);
@@ -108,5 +81,5 @@ cron.schedule('0 0 * * *', async () => {
 
 // Sunucu Başlatma
 app.listen(PORT, () => {
-    console.log(`Sunucu ${PORT} portunda çalışıyor`);
+    console.log(`Sunucu çalışıyor`);
 });
