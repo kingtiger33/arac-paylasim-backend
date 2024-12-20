@@ -26,6 +26,7 @@ const vehicleSchema = new mongoose.Schema({
     date: String,
     time: String,
     availableSeats: Number,
+    contact: String, // İletişim alanı eklendi
     createdAt: {
         type: Date,
         default: Date.now
