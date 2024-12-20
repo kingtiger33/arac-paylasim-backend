@@ -18,10 +18,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const date = document.getElementById('date').value;
         const time = document.getElementById('time').value;
         const availableSeats = parseInt(document.getElementById('availableSeats').value);
+        const contact = document.getElementById('contact').value.trim();
 
         // Basit doğrulama
-        if (fullName && location && date && time && availableSeats > 0) {
-            const newVehicle = { fullName, location, date, time, availableSeats };
+        if (fullName && location && date && time && availableSeats > 0 && contact) {
+            const newVehicle = { fullName, location, date, time, availableSeats, contact };
 
             try {
                 // Backend'e POST isteği gönder
@@ -96,31 +97,11 @@ document.addEventListener('DOMContentLoaded', () => {
             vehicleCard.className = 'vehicle-card';
 
             vehicleCard.innerHTML = `
-                <h5>${vehicle.location} - ${vehicle.date} ${vehicle.time}</h5>
+                <h5>${vehicle.location} - ${new Date(vehicle.date).toLocaleDateString('tr-TR')} ${vehicle.time}</h5>
                 <p><strong>Sürücü:</strong> ${vehicle.fullName}</p>
                 <p><strong>Mevcut Koltuk:</strong> ${vehicle.availableSeats}</p>
-                <button class="btn btn-primary request-button" ${vehicle.availableSeats === 0 ? 'disabled' : ''}>Araç Talep Et</button>
+                <p><strong>İletişim:</strong> ${vehicle.contact}</p>
             `;
-
-            const requestButton = vehicleCard.querySelector('.request-button');
-            requestButton.addEventListener('click', async () => {
-                if (confirm("Araç talep etmek istediğinize emin misiniz?")) {
-                    try {
-                        const response = await fetch(`${API_URL}/${vehicle._id}/request`, {
-                            method: 'PUT',
-                        });
-
-                        if (!response.ok) {
-                            throw new Error('Araç talep etme başarısız oldu.');
-                        }
-
-                        alert("Araç talebiniz başarıyla alındı!");
-                        fetchVehicles(); // Listeyi güncelle
-                    } catch (error) {
-                        alert(error.message);
-                    }
-                }
-            });
 
             vehiclesContainer.appendChild(vehicleCard);
         });
