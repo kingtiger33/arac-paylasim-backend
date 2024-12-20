@@ -1,4 +1,3 @@
-// server.js
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -44,9 +43,9 @@ app.get('/', (req, res) => {
 
 // Araç Paylaşma
 app.post('/api/vehicles', async (req, res) => {
-    const { fullName, location, date, time, availableSeats } = req.body;
+    const { fullName, location, date, time, availableSeats, contact } = req.body; // Contact bilgisi eklendi
     try {
-        const newVehicle = new Vehicle({ fullName, location, date, time, availableSeats });
+        const newVehicle = new Vehicle({ fullName, location, date, time, availableSeats, contact });
         await newVehicle.save();
         res.status(201).json(newVehicle);
     } catch (error) {
@@ -54,10 +53,22 @@ app.post('/api/vehicles', async (req, res) => {
     }
 });
 
-// Araç Listeleme
+// Araç Listeleme (Bugünden Sonraki Tarihler)
 app.get('/api/vehicles', async (req, res) => {
     try {
-        const vehicles = await Vehicle.find();
+        const today = new Date().toISOString().split('T')[0]; // Bugünün tarihini alın
+        const vehicles = await Vehicle.find({ date: { $gte: today } }); // Tarihi bugünden büyük veya eşit olanları al
+        res.json(vehicles);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// Belirli Tarihe Göre Araç Listeleme
+app.get('/api/vehicles/date/:date', async (req, res) => {
+    const { date } = req.params;
+    try {
+        const vehicles = await Vehicle.find({ date }); // Verilen tarihe ait araçlar
         res.json(vehicles);
     } catch (error) {
         res.status(500).json({ message: error.message });
