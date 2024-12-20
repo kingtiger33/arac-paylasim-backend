@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const cron = require('node-cron'); // Cron job için gerekli paket
 require('dotenv').config();
 
 const app = express();
@@ -91,6 +92,17 @@ app.put('/api/vehicles/:id/request', async (req, res) => {
         res.json(vehicle);
     } catch (error) {
         res.status(500).json({ message: error.message });
+    }
+});
+
+// Cron Job: Günlük olarak geçmiş araçları sil
+cron.schedule('0 0 * * *', async () => {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        const result = await Vehicle.deleteMany({ date: { $lt: today } }); // Tarihi bugünden küçük olanları sil
+        console.log(`Geçmiş araçlar temizlendi. Silinen araç sayısı: ${result.deletedCount}`);
+    } catch (error) {
+        console.error('Cron job hatası:', error.message);
     }
 });
 
