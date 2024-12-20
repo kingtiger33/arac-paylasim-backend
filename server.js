@@ -36,6 +36,11 @@ const Vehicle = mongoose.model('Vehicle', vehicleSchema);
 
 // API Rotaları
 
+// Ana sayfa rotası
+app.get('/', (req, res) => {
+    res.send('Backend API is running...');
+});
+
 // Araç Paylaşma
 app.post('/api/vehicles', async (req, res) => {
     const { fullName, location, date, time, availableSeats } = req.body;
