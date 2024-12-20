@@ -6,14 +6,14 @@
       "use": "@vercel/node"
     },
     {
-      "src": "api/**/*.js",
+      "src": "api/cleanup.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
+      "src": "/api/cleanup",
+      "dest": "/api/cleanup.js"
     },
     {
       "src": "/(.*)",
