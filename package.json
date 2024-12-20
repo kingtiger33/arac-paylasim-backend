@@ -4,7 +4,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "vercel-build": "node server.js"
+    "vercel-build": "node server.js" // Bu, Vercel için geçerli
   },
   "dependencies": {
     "cors": "^2.8.5",
@@ -12,5 +12,8 @@
     "express": "^4.21.2",
     "mongoose": "^8.9.2",
     "node-cron": "^3.0.0"
+  },
+  "engines": {
+    "node": "18.x" // Vercel için doğru Node.js sürümü
   }
 }
