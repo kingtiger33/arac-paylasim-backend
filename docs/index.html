@@ -97,15 +97,34 @@
 
     <!-- JavaScript -->
     <script>
-        // Parola Kontrolü
-        document.getElementById('passwordSubmit').addEventListener('click', () => {
-            const password = document.getElementById('passwordInput').value;
-            const correctPasswords = ["tk1923"]; // Belirlediğiniz iki şifre
+        const BACKEND_URL = "https://arac-paylasim-backend.vercel.app"; // Backend URL
 
-            if (correctPasswords.includes(password)) {
-                document.getElementById('passwordPrompt').style.display = 'none';
-                document.getElementById('mainContent').style.display = 'block';
-            } else {
+        document.getElementById('passwordSubmit').addEventListener('click', async () => {
+            const password = document.getElementById('passwordInput').value;
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/auth`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ password }) // Parolayı backend'e gönder
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    document.getElementById('passwordPrompt').style.display = 'none';
+                    document.getElementById('mainContent').style.display = 'block';
+                } else {
+                    document.getElementById('passwordError').textContent = result.message;
+                    document.getElementById('passwordError').style.display = 'block';
+                    setTimeout(() => {
+                        document.getElementById('passwordError').style.display = 'none';
+                    }, 3000);
+                }
+            } catch (error) {
+                document.getElementById('passwordError').textContent = 'Bir hata oluştu. Lütfen tekrar deneyin.';
                 document.getElementById('passwordError').style.display = 'block';
                 setTimeout(() => {
                     document.getElementById('passwordError').style.display = 'none';
