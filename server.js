@@ -1,4 +1,3 @@
-// server.js
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -19,14 +18,15 @@ mongoose.connect(process.env.MONGODB_URI, {
 .then(() => console.log('MongoDB Bağlandı'))
 .catch(err => console.error('MongoDB Bağlantı Hatası:', err));
 
+// Parola (Çevre değişkeninden alınır)
+const SECRET_PASSWORD = process.env.SECRET_PASSWORD || "tk1923";
+
 // Araç Şeması
-// Tarih ve saat string olarak saklanıyor.
-// date: "YYYY-MM-DD", time: "HH:MM"
 const vehicleSchema = new mongoose.Schema({
     fullName: String,
     location: String,
-    date: String,        // String formatında tarih
-    time: String,        // String formatında saat
+    date: String,
+    time: String,
     availableSeats: Number,
     contact: String,
     createdAt: {
@@ -42,12 +42,25 @@ app.get('/', (req, res) => {
     res.send('Backend API is running...');
 });
 
-// Araç Paylaşma (tarih ve saat string olarak kaydedilir)
+// Parola Doğrulama Endpoint'i
+app.post('/api/auth', (req, res) => {
+    const { password } = req.body;
+
+    if (!password) {
+        return res.status(400).json({ message: 'Parola girilmedi.' });
+    }
+
+    if (password === SECRET_PASSWORD) {
+        return res.status(200).json({ success: true, message: 'Parola doğru.' });
+    } else {
+        return res.status(401).json({ success: false, message: 'Parola yanlış.' });
+    }
+});
+
+// Araç Paylaşma
 app.post('/api/vehicles', async (req, res) => {
     const { fullName, location, date, time, availableSeats, contact } = req.body;
-    console.log("Gelen Veri:", { fullName, location, date, time, availableSeats, contact });
 
-    // Basit doğrulama
     if (!date || !time) {
         return res.status(400).json({ message: 'Tarih veya saat alanı eksik.' });
     }
@@ -56,8 +69,8 @@ app.post('/api/vehicles', async (req, res) => {
         const newVehicle = new Vehicle({ 
             fullName, 
             location, 
-            date,        // String olarak sakla
-            time,        // String olarak sakla
+            date, 
+            time, 
             availableSeats, 
             contact 
         });
@@ -72,7 +85,6 @@ app.post('/api/vehicles', async (req, res) => {
 // Araç Listeleme (Tüm araçlar)
 app.get('/api/vehicles', async (req, res) => {
     try {
-        // İsterseniz tarihe göre sıralamak için: sort({ date: 1, time: 1 })
         const vehicles = await Vehicle.find().sort({ date: 1, time: 1 });
         res.json(vehicles);
     } catch (error) {
@@ -81,12 +93,9 @@ app.get('/api/vehicles', async (req, res) => {
 });
 
 // Tarihe Göre Araç Listeleme
-// Bu sorguda doğrudan string karşılaştırması yapıyoruz.
-// Yani date = "YYYY-MM-DD" eşleşmesi
 app.get('/api/vehicles/date/:date', async (req, res) => {
-    const { date } = req.params; // "YYYY-MM-DD"
+    const { date } = req.params;
     try {
-        // O güne ait tüm araçları listele
         const vehicles = await Vehicle.find({ date }).sort({ time: 1 });
         res.json(vehicles);
     } catch (error) {
