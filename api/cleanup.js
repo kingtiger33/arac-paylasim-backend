@@ -1,26 +1,26 @@
-// api/cleanup.js
 import mongoose from 'mongoose';
+import dotenv from 'dotenv';
 
-// Burada kendi veritabanı bağlantı kodunuzu kullanmanız gerekiyor.
-// Daha önce connectToDatabase fonksiyonu ya da direkt mongoose.connect kullanmış olabilirsiniz.
-// Örnek basit bir bağlantı (örn. `MONGODB_URI` environment variable'ınız var):
+// Çevresel değişkenleri yükle
+dotenv.config();
+
+// MongoDB bağlantı fonksiyonu
 const connectToDatabase = async () => {
-    if (mongoose.connection.readyState === 0) {
+    if (!mongoose.connection.readyState) {
         await mongoose.connect(process.env.MONGODB_URI, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
         });
+        console.log("MongoDB bağlantısı başarılı.");
     }
 };
 
-// Örnek şema veya model dosyası:
-// Eğer modeliniz `server.js` içinde tanımlıysa oradan çıkartıp ayrı bir dosyaya koyabilir veya burada tekrar tanımlayabilirsiniz.
-// Aşağıda örnek olması için tekrar tanımlıyorum. Siz kendi `Vehicle` modelinizi kullanın.
+// Araç şeması ve model tanımı
 const vehicleSchema = new mongoose.Schema({
     fullName: String,
     location: String,
-    date: String, // YYYY-MM-DD formatında tarih saklıyorsanız
-    time: String,
+    date: String, // YYYY-MM-DD formatında tarih
+    time: String, // HH:MM formatında saat
     availableSeats: Number,
     contact: String,
     createdAt: {
@@ -30,20 +30,26 @@ const vehicleSchema = new mongoose.Schema({
 });
 const Vehicle = mongoose.models.Vehicle || mongoose.model('Vehicle', vehicleSchema);
 
+// Cleanup handler fonksiyonu
 export default async function handler(req, res) {
+    if (req.method !== 'GET') {
+        return res.status(405).json({ message: 'Method Not Allowed. Sadece GET istekleri desteklenir.' });
+    }
+
     try {
+        // Veritabanına bağlan
         await connectToDatabase();
-        
-        // Bugünün tarihini YYYY-MM-DD formatında alalım
+
+        // Bugünün tarihini YYYY-MM-DD formatında al
         const today = new Date().toISOString().split('T')[0];
 
-        // Bugünden önceki tarihe sahip tüm araçları silelim
+        // Bugünden önceki tarihe sahip tüm araçları sil
         const result = await Vehicle.deleteMany({ date: { $lt: today } });
         console.log(`Eski araçlar temizlendi. Silinen araç sayısı: ${result.deletedCount}`);
 
         return res.status(200).json({ message: 'Temizlik başarılı', deletedCount: result.deletedCount });
     } catch (error) {
-        console.error('Temizlik hatası:', error);
+        console.error('Temizlik hatası:', error.message);
         return res.status(500).json({ message: 'Temizlik hatası', error: error.message });
     }
 }
