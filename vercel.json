@@ -13,7 +13,7 @@
   "routes": [
     {
       "src": "/api/cleanup",
-      "dest": "/api/cleanup.js"
+      "dest": "api/cleanup.js"
     },
     {
       "src": "/(.*)",
