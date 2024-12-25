@@ -100,9 +100,9 @@
         // Parola Kontrolü
         document.getElementById('passwordSubmit').addEventListener('click', () => {
             const password = document.getElementById('passwordInput').value;
-            const correctPassword = "2234"; // Belirlediğiniz parola
+            const correctPasswords = ["2234", "2305"]; // Belirlediğiniz iki şifre
 
-            if (password === correctPassword) {
+            if (correctPasswords.includes(password)) {
                 document.getElementById('passwordPrompt').style.display = 'none';
                 document.getElementById('mainContent').style.display = 'block';
             } else {
