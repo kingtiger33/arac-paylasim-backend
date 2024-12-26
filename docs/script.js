@@ -6,6 +6,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const vehiclesContainer = document.getElementById('vehiclesContainer');
     const searchByDateBtn = document.getElementById('searchByDateBtn');
     const searchDateInput = document.getElementById('searchDate');
+    const dateInput = document.getElementById('date'); // Tarih input alanı
+
+    // Tarih seçiminde bugünden öncesini engelle
+    const today = new Date().toISOString().split('T')[0]; // Bugünün tarihini "YYYY-MM-DD" formatında al
+    dateInput.setAttribute('min', today); // Tarih alanına minimum değeri ata
 
     // Sayfa yüklendiğinde mevcut araçları backend'den yükle
     fetchVehicles();
