@@ -9,8 +9,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const dateInput = document.getElementById('date'); // Tarih input alanı
 
     // Tarih seçiminde bugünden öncesini engelle
-    const today = new Date().toISOString().split('T')[0]; // Bugünün tarihini "YYYY-MM-DD" formatında al
-    dateInput.setAttribute('min', today); // Tarih alanına minimum değeri ata
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.setAttribute('min', today);
+
+    // Tarih seçimi doğrulamasını kontrol et
+    dateInput.addEventListener('input', () => {
+        if (dateInput.value < today) {
+            alert("Geçmiş bir tarih seçemezsiniz. Lütfen bugünden sonraki bir tarih seçin.");
+            dateInput.value = today;
+        }
+    });
 
     // Sayfa yüklendiğinde mevcut araçları backend'den yükle
     fetchVehicles();
@@ -28,6 +36,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const contact = document.getElementById('contact').value.trim();
 
         if (fullName && location && date && time && availableSeats > 0 && contact) {
+            if (date < today) {
+                alert("Geçmiş bir tarih seçemezsiniz. Lütfen bugünden sonraki bir tarih seçin.");
+                return;
+            }
+
             const newVehicle = { fullName, location, date, time, availableSeats, contact };
 
             try {
